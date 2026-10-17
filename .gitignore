@@ -1,0 +1,7 @@
+# Credential dumps and Claude Code state: never commit these.
+*.tar.gz
+*.tgz
+.credentials.json
+.claude.json
+oauthAccount.json
+backups/
