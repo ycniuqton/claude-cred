@@ -2,10 +2,10 @@
 
 Move your own Claude Code login from one machine to another without signing in again.
 
-- `claude-cred.sh` (Linux): `export` packs your login into a `.tar.gz`. `load` imports one on another Linux machine.
-- `claude-cred.ps1` (Windows): `load` imports a `.tar.gz` made by `claude-cred.sh export`.
+- `claude-cred.sh` (Linux): `export` packs your login into a `.tar.gz`. `load` imports one.
+- `claude-cred.ps1` (Windows): `export` and `load`, with the same tarball format as the Linux script.
 
-Supported directions: Linux → Linux and Linux → Windows.
+Supported directions: Linux ↔ Linux, Linux ↔ Windows and Windows ↔ Windows.
 
 ## What gets copied
 
@@ -38,10 +38,10 @@ To install a specific version, set `CLAUDE_CRED_REF` first, e.g. `CLAUDE_CRED_RE
 
 ## Usage
 
-### 1. Export on Linux
+### 1. Export (Linux or Windows)
 
 ```bash
-claude-cred export            # writes claude-cred-YYYYMMDD-HHMMSS.tar.gz in the current folder
+claude-cred export [output.tar.gz]   # default: claude-cred-YYYYMMDD-HHMMSS.tar.gz in the current folder
 ```
 
 ### 2. Copy it over SSH
@@ -50,7 +50,7 @@ claude-cred export            # writes claude-cred-YYYYMMDD-HHMMSS.tar.gz in the
 scp user@linux-host:~/claude-cred-*.tar.gz .
 ```
 
-Then delete the tarball on the Linux machine.
+Then delete the tarball on the source machine. From Windows, use `scp` the other way round (`scp .\claude-cred-*.tar.gz user@host:~/`).
 
 ### 3. Load on the other machine (Windows or Linux)
 

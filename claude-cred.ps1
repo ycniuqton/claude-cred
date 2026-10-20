@@ -1,8 +1,9 @@
-# Load a Claude Code login exported on Linux by claude-cred.sh into this
-# Windows machine (%USERPROFILE%\.claude\.credentials.json + the non-secret
-# oauthAccount identity block merged into %USERPROFILE%\.claude.json).
+# Export/load a Claude Code login (%USERPROFILE%\.claude\.credentials.json +
+# the non-secret oauthAccount identity block from %USERPROFILE%\.claude.json)
+# between machines you control. Tarballs are compatible with claude-cred.sh.
 #
-# Usage (export on Ubuntu with claude-cred.sh, then on Windows):
+# Usage:
+#   claude-cred export [output.tar.gz]
 #   claude-cred load <input.tar.gz> [--keep]
 #
 # The tarball contains a LIVE ACCESS TOKEN. Treat it like a password:
@@ -60,6 +61,61 @@ function Merge-OAuthAccount([string]$oauthPath) {
   $doc['oauthAccount'] = $block
 
   [IO.File]::WriteAllText($ClaudeJson, $ser.Serialize($doc), $Utf8NoBom)
+}
+
+function Extract-OAuthAccount([string]$outPath) {
+  # Skips any key containing token/secret/key as a defensive filter (the
+  # oauthAccount block is identity-only, not auth material, but this keeps
+  # it that way if the schema ever grows).
+  $ser = New-JsonSerializer
+  $doc = $ser.DeserializeObject([IO.File]::ReadAllText($ClaudeJson, $Utf8NoBom))
+  if ($doc -isnot [System.Collections.IDictionary]) { Die "$ClaudeJson is not a JSON object" }
+
+  if (-not $doc.ContainsKey('oauthAccount') -or $doc['oauthAccount'] -isnot [System.Collections.IDictionary]) {
+    [Console]::Error.WriteLine("no oauthAccount block in $ClaudeJson - skipping identity export")
+    return
+  }
+
+  $safe = @{}
+  foreach ($k in $doc['oauthAccount'].Keys) {
+    if ($k -match '(?i)token|secret|key') { continue }
+    $safe[$k] = $doc['oauthAccount'][$k]
+  }
+  [IO.File]::WriteAllText($outPath, $ser.Serialize($safe), $Utf8NoBom)
+}
+
+function Cmd-Export([string[]]$rest) {
+  # An empty array passed as an argument arrives as $null under StrictMode.
+  $args2 = @($rest | Where-Object { $_ })
+  if ($args2.Count -gt 1) { Die "unexpected argument: $($args2[1])" }
+  $out = if ($args2.Count -eq 1) { $args2[0] } else { "claude-cred-$(Get-Date -Format 'yyyyMMdd-HHmmss').tar.gz" }
+  # Absolute path, so it doesn't depend on tar's -C working directory.
+  if (-not [IO.Path]::IsPathRooted($out)) { $out = Join-Path (Get-Location).ProviderPath $out }
+
+  if (-not (Test-Path -LiteralPath $CredsFile -PathType Leaf)) { Die "$CredsFile not found - is this box logged in?" }
+
+  $stage = Join-Path ([IO.Path]::GetTempPath()) ("claude-cred-" + [Guid]::NewGuid().ToString('N'))
+  New-Item -ItemType Directory -Path $stage | Out-Null
+  Restrict-ToCurrentUser $stage
+  try {
+    Copy-Item -LiteralPath $CredsFile (Join-Path $stage '.credentials.json')
+
+    if (Test-Path -LiteralPath $ClaudeJson) {
+      Extract-OAuthAccount (Join-Path $stage 'oauthAccount.json')
+    }
+
+    & $Tar -czf $out -C $stage .
+    if ($LASTEXITCODE -ne 0) { Die "failed to create $out" }
+    Restrict-ToCurrentUser $out
+  } finally {
+    Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue
+  }
+
+  Write-Host "Wrote $out"
+  Write-Host ""
+  Write-Host "This file contains a live access token. Transfer it over SSH only,"
+  Write-Host "e.g.: scp `"$out`" user@newhost:~/"
+  Write-Host "then delete it from THIS machine too once the transfer is confirmed."
 }
 
 function Cmd-Load([string[]]$rest) {
@@ -144,6 +200,6 @@ $mode = if ($args.Count -gt 0) { [string]$args[0] } else { '' }
 $rest = if ($args.Count -gt 1) { [string[]]$args[1..($args.Count - 1)] } else { @() }
 switch ($mode) {
   'load'   { Cmd-Load $rest }
-  'export' { Die "export is not supported on Windows; run 'claude-cred.sh export' on the Linux box" }
-  default  { Die "usage: claude-cred load <input.tar.gz> [--keep]" }
+  'export' { Cmd-Export $rest }
+  default  { Die "usage: claude-cred {export [output.tar.gz] | load <input.tar.gz> [--keep]}" }
 }

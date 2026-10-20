@@ -47,5 +47,5 @@
   if (($env:Path -split ';') -notcontains $root) { $env:Path = "$env:Path;$root" }
 
   Write-Host "Installed claude-cred ($ref) to $root"
-  Write-Host "Run: claude-cred load <file.tar.gz>   (open a new terminal if the command isn't found)"
+  Write-Host "Run: claude-cred export, or claude-cred load <file.tar.gz>   (open a new terminal if the command isn't found)"
 }
