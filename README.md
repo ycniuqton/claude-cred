@@ -16,13 +16,32 @@ Supported directions: Linux → Linux and Linux → Windows.
 
 No other settings are touched.
 
+## Install
+
+**Linux** (needs `bash`, `tar`, `python3`, and `curl` or `wget`):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ycniuqton/claude-cred/main/install.sh | bash
+```
+
+This installs the command to `~/.local/bin/claude-cred`. If that folder isn't on your PATH, the installer tells you how to add it.
+
+**Windows** (PowerShell; needs Windows 10 1803 or later for the built-in `tar.exe`):
+
+```powershell
+irm https://raw.githubusercontent.com/ycniuqton/claude-cred/main/install.ps1 | iex
+```
+
+This installs to `%LOCALAPPDATA%\Programs\claude-cred` and adds that folder to your user PATH. Open a new terminal afterwards. The command works in both PowerShell and cmd.
+
+To install a specific version, set `CLAUDE_CRED_REF` first, e.g. `CLAUDE_CRED_REF=v1.1.0` (bash) or `$env:CLAUDE_CRED_REF='v1.1.0'` (PowerShell). Running the installer again updates the command.
+
 ## Usage
 
 ### 1. Export on Linux
 
 ```bash
-chmod +x claude-cred.sh
-./claude-cred.sh export            # writes claude-cred-YYYYMMDD-HHMMSS.tar.gz
+claude-cred export            # writes claude-cred-YYYYMMDD-HHMMSS.tar.gz in the current folder
 ```
 
 ### 2. Copy it over SSH
@@ -33,18 +52,10 @@ scp user@linux-host:~/claude-cred-*.tar.gz .
 
 Then delete the tarball on the Linux machine.
 
-### 3a. Load on Windows
+### 3. Load on the other machine (Windows or Linux)
 
-Requirements: Windows 10 1803 or later (needs the built-in `tar.exe`), Windows PowerShell 5.1 or later.
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\claude-cred.ps1 load .\claude-cred-YYYYMMDD-HHMMSS.tar.gz [--keep]
 ```
-
-### 3b. Load on Linux
-
-```bash
-./claude-cred.sh load claude-cred-YYYYMMDD-HHMMSS.tar.gz [--keep]
+claude-cred load claude-cred-YYYYMMDD-HHMMSS.tar.gz [--keep]
 ```
 
 ### 4. Restart Claude Code
@@ -75,6 +86,11 @@ Use this only for **your own** account on **machines you control**. Sharing a Cl
 
 - Both machines may end up sharing one refresh token. If one machine refreshes it, the other can get logged out. If that happens, log in there again or import a fresh export.
 - On macOS, Claude Code stores the login in the Keychain, not in `.credentials.json`, so these scripts don't support macOS.
+
+## Uninstall
+
+- **Linux:** `rm ~/.local/bin/claude-cred`
+- **Windows:** delete `%LOCALAPPDATA%\Programs\claude-cred`, then remove it from your user PATH (Settings → System → About → Advanced system settings → Environment Variables).
 
 ## License
 

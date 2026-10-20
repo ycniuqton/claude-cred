@@ -4,8 +4,8 @@
 # you control.
 #
 # Usage:
-#   claude-cred.sh export [output.tar.gz]
-#   claude-cred.sh load   <input.tar.gz> [--keep]
+#   claude-cred export [output.tar.gz]
+#   claude-cred load   <input.tar.gz> [--keep]
 #
 # The tarball contains a LIVE ACCESS TOKEN. Treat it like a password:
 #   - Move it only over SSH (scp/rsync over ssh, or `ssh ... | tar ...`).
@@ -96,7 +96,7 @@ cmd_export() {
 }
 
 cmd_load() {
-  local in="${1:?usage: claude-cred.sh load <input.tar.gz> [--keep]}"
+  local in="${1:?usage: claude-cred load <input.tar.gz> [--keep]}"
   local keep="${2:-}"
 
   [[ -f "$in" ]] || die "$in not found"
@@ -159,7 +159,7 @@ main() {
   case "$mode" in
     export) cmd_export "$@" ;;
     load)   cmd_load "$@" ;;
-    *) die "usage: $0 {export [output.tar.gz] | load <input.tar.gz> [--keep]}" ;;
+    *) die "usage: $(basename "$0") {export [output.tar.gz] | load <input.tar.gz> [--keep]}" ;;
   esac
 }
 

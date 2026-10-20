@@ -3,7 +3,7 @@
 # oauthAccount identity block merged into %USERPROFILE%\.claude.json).
 #
 # Usage (export on Ubuntu with claude-cred.sh, then on Windows):
-#   powershell -ExecutionPolicy Bypass -File claude-cred.ps1 load <input.tar.gz> [--keep]
+#   claude-cred load <input.tar.gz> [--keep]
 #
 # The tarball contains a LIVE ACCESS TOKEN. Treat it like a password:
 #   - Move it only over SSH (scp from Windows' built-in OpenSSH client).
@@ -70,7 +70,7 @@ function Cmd-Load([string[]]$rest) {
     elseif (-not $in) { $in = $a }
     else { Die "unexpected argument: $a" }
   }
-  if (-not $in) { Die "usage: claude-cred.ps1 load <input.tar.gz> [--keep]" }
+  if (-not $in) { Die "usage: claude-cred load <input.tar.gz> [--keep]" }
   if (-not (Test-Path -LiteralPath $in -PathType Leaf)) { Die "$in not found" }
   $in = (Resolve-Path -LiteralPath $in).ProviderPath
 
@@ -145,5 +145,5 @@ $rest = if ($args.Count -gt 1) { [string[]]$args[1..($args.Count - 1)] } else { 
 switch ($mode) {
   'load'   { Cmd-Load $rest }
   'export' { Die "export is not supported on Windows; run 'claude-cred.sh export' on the Linux box" }
-  default  { Die "usage: claude-cred.ps1 load <input.tar.gz> [--keep]" }
+  default  { Die "usage: claude-cred load <input.tar.gz> [--keep]" }
 }
